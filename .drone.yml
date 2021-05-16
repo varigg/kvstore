@@ -1,0 +1,54 @@
+---
+kind: pipeline
+name: default
+
+global-variables:
+  environment: &default_environment
+    GOOS: linux
+    GOARCH: amd64
+    CGO_ENABLED: 0
+
+workspace:
+  base: /code
+
+steps:
+  - name: yaml-lint
+    image: cytopia/yamllint
+    pull: if-not-exists
+    commands:
+      - "yamllint /code"
+
+
+  - name: download-dependencies
+    image: golang:1.16
+    pull: if-not-exists
+    environment:
+      <<: *default_environment
+    commands:
+      - go get -d ./...
+
+  - name: lint-check
+    image: golangci/golangci-lint:v1.40.1
+    pull: if-not-exists
+    environment:
+      <<: *default_environment
+    commands:
+      - golangci-lint run -v
+
+
+  - name: unit-test
+    image: golang:1.16
+    pull: if-not-exists
+    environment:
+      <<: *default_environment
+    commands:
+      - make test
+
+
+  - name: build
+    image: golang:1.16
+    pull: if-not-exists
+    environment:
+      <<: *default_environment
+    commands:
+      - make build
