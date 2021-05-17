@@ -6,7 +6,7 @@ build:
 	go build -o ${BINARY_NAME} main.go
  
 test:
-	go test -v ./...
+	go test -v -coverprofile=coverage.out ./...
  
 run:
 	go build -o ${BINARY_NAME} main.go

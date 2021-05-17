@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRun(t *testing.T) {
+func TestReadWriteStartAbort(t *testing.T) {
 	content := []byte("WRITE a hello\nREAD a\nSTART\nWRITE a hello-again\nREAD a\nABORT\nREAD a\nQUIT\n")
 	var stdin bytes.Buffer
 	var stdout bytes.Buffer
@@ -17,6 +17,19 @@ func TestRun(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "hello\nhello-again\nhello\n", stdout.String())
 }
+
+func TestCommitDelete(t *testing.T) {
+	content := []byte("WRITE a hello\nREAD a\nSTART\nDELETE a\nREAD a\nCOMMIT\nREAD a\nQUIT\n")
+	var stdin bytes.Buffer
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	stdin.Write(content)
+	err := run(nil, &stdin, &stdout, &stderr)
+	assert.Nil(t, err)
+	assert.Equal(t, "hello\n", stdout.String())
+	assert.Equal(t, "Key not found: a\nKey not found: a\n", stderr.String())
+}
+
 func TestRunUnknownCommand(t *testing.T) {
 	content := []byte("EXECUTE Order 66\nQUIT\n")
 	var stdin bytes.Buffer
